@@ -12,7 +12,7 @@
             list-style: none;
             padding: 0;
             margin: 0;
-            width: 200px;
+            width: 300px;
         }
 
         li {
@@ -28,23 +28,71 @@
             cursor: pointer;
             font-size: 20px;
         }
+
+        .lists-wrapper, .todos-wrapper {
+            display: inline-block;
+            vertical-align: top;
+        }
     </style>
 </head>
 <body>
-<form id="form">
-    <input id="description" type="text" name="description"/>
-    <input type="submit" value="Create"/>
-</form>
-<div id="error" class="hidden">Something went wrong!</div>
-<ul id="todos">
-    {% for d in data %}
-    <li><input class="check-completed" data-id="{{ d.id }}" type="checkbox" {% if d.completed %} checked {% endif %}/>
-        {{ d.description }}
-        <button class="delete-todo" data-id="{{ d.id }}">&cross;</button>
-    </li>
-    {% endfor %}
-</ul>
+<div class="lists-wrapper">
+    <h4>Todo Lists</h4>
+    <form id="list-form" action="/lists/create" method="POST">
+        <label for="todolist">Create List:</label>
+        <input id="todolist-input" type="text" name="todolist" placeholder="A new list" data-id="{{ active_list.id }}">
+        <button type="submit">Create List</button>
+    </form>
+    <ul id="lists">
+        {% for list in lists %}
+            <li><a href="/lists/{{ list.id }}">
+                {{ list.name }}</a></li>
+        {% endfor %}
+    </ul>
+</div>
+<div class="todos-wrapper">
+    <h4>{{ active_list.name }}</h4>
+    <form id="form">
+        <input id="description" type="text" name="description"/>
+        <input type="submit" value="Create"/>
+    </form>
+    <div id="error" class="hidden">Something went wrong!</div>
+    <ul id="todos">
+        {% for todo in todos %}
+            <li><input class="check-completed" data-id="{{ todo.id }}" type="checkbox" {% if todo.completed %}
+                       checked {% endif %}/>
+                {{ todo.description }}
+                <button class="delete-todo" data-id="{{ todo.id }}">&cross;</button>
+            </li>
+        {% endfor %}
+    </ul>
+</div>
 <script>
+    document.getElementById('list-form').onsubmit = function (e) {
+        e.preventDefault();
+
+        fetch('/lists/create', {
+            method: 'POST',
+            body: JSON.stringify({
+                'name': document.getElementById('todolist-input').value
+            }),
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }).then(function (response) {
+            return response.json()
+        }).then(function (jsonResponse) {
+            const liItem = document.createElement('LI');
+
+            liItem.innerHTML = jsonResponse['name'];
+            document.getElementById('lists').appendChild(liItem);
+            document.getElementById('error').className = 'hidden';
+            window.location.reload(true);
+        }).catch(function (err) {
+            document.getElementById('error').className = '';
+        })
+    }
+
     const crosses = document.querySelectorAll('.delete-todo')
     for (let i = 0; i < crosses.length; i++) {
         const cross = crosses[i];
@@ -105,7 +153,6 @@
         }).catch(function () {
             document.getElementById('error').className = '';
         })
-
     }
 </script>
 </body>
