@@ -48,6 +48,7 @@
             <li>
                 <input class="list-check-completed" type="checkbox" data-id="{{ list.id }}">
                 <a href="/lists/{{ list.id }}">{{ list.name }}</a>
+                <button class="delete-list" data-id="{{ list.id }}">&cross;</button>
             </li>
         {% endfor %}
     </ul>
@@ -71,19 +72,43 @@
     </ul>
 </div>
 <script>
-
+    const listCrosses = document.querySelectorAll('.delete-list')
+    for (let i = 0; i < listCrosses.length; i++) {
+        const listCross = listCrosses[i];
+        listCross.onclick = function (e) {
+            console.log('Delete event', e);
+            const listId = e.target.dataset['id'];
+            fetch('/lists/' + listId + '/delete', {
+                method: 'DELETE'
+            }).then(function () {
+                console.log('Parent?', e.target);
+                const item = e.target.parentElement;
+                item.remove();
+                document.getElementById('error').className = 'hidden';
+                window.location.reload(true)
+            }).catch(function (e) {
+                console.error(e)
+                document.getElementById('error').className = '';
+            })
+        }
+    }
 
     const crosses = document.querySelectorAll('.delete-todo')
     for (let i = 0; i < crosses.length; i++) {
         const cross = crosses[i];
         cross.onclick = function (e) {
-            console.log('event', e)
+            console.log('Delete event', e);
             const todoId = e.target.dataset['id'];
             fetch('/todos/' + todoId + '/delete', {
                 method: 'DELETE'
             }).then(function () {
+                console.log('Parent?', e.target);
+                const item = e.target.parentElement;
+                item.remove();
                 document.getElementById('error').className = 'hidden';
-            }).catch(function () {
+                window.location.reload(true)
+            }).catch(function (e) {
+                console.error(e)
                 document.getElementById('error').className = '';
             })
         }

@@ -113,6 +113,28 @@ def create_list():
         return jsonify(body)
 
 
+@app.route('/lists/<list_id>/delete', methods=['DELETE'])
+def delete_list(list_id):
+    error = False
+    try:
+        list = TodoList.query.get(list_id)
+        for todo in list.todos:
+            db.session.delete(todo)
+
+        db.session.delete(list)
+        db.session.commit()
+    except:
+        db.session.rollback()
+        error = True
+        print(sys.exc_info())
+    finally:
+        db.session.close()
+    if error:
+        abort(500)
+    else:
+        return jsonify({'success': True})
+
+
 @app.route('/lists/<list_id>/set-completed', methods=['POST'])
 def set_completed_list(list_id):
     error = False
